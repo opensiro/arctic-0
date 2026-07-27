@@ -1,0 +1,1731 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARC Task Creator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #fafafa;
+            color: #333;
+            padding: 1rem;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: normal;
+            letter-spacing: 0.05em;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 2rem;
+        }
+
+        .editor-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .task-controls {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        select {
+            font-family: 'Courier New', monospace;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #333;
+            box-shadow: 0 0 0 2px rgba(51, 51, 51, 0.1);
+        }
+
+        button {
+            font-family: 'Courier New', monospace;
+            padding: 0.5rem 1rem;
+            border: 1px solid #333;
+            background-color: #fff;
+            color: #333;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background-color: #333;
+            color: #fff;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .task-info {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .task-info input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .example-section {
+            border: 1px solid #ddd;
+            padding: 1rem;
+            background-color: #fff;
+        }
+
+        .example-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .example-tab {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-family: 'Courier New', monospace;
+        }
+
+        .example-tab.active {
+            border-bottom-color: #333;
+        }
+
+        .example-content {
+            display: none;
+        }
+
+        .example-content.active {
+            display: block;
+        }
+
+        .grid-wrapper {
+            display: inline-block;
+            border: 1px solid #333;
+            background-color: #fff;
+        }
+
+        .grid-row {
+            display: flex;
+        }
+
+        .grid-cell {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            cursor: cell;
+            user-select: none;
+            transition: all 0.1s;
+            position: relative;
+        }
+
+        .grid-cell:hover {
+            border-color: #333;
+            box-shadow: inset 0 0 0 1px #333;
+        }
+
+        .grid-cell.selected {
+            box-shadow: inset 0 0 0 2px #333;
+        }
+
+        /* ARC Color Palette */
+        .color-0 { background-color: #000000; color: #fff; }
+        .color-1 { background-color: #0074D9; color: #fff; }
+        .color-2 { background-color: #FF4136; color: #fff; }
+        .color-3 { background-color: #2ECC40; color: #000; }
+        .color-4 { background-color: #FFDC00; color: #000; }
+        .color-5 { background-color: #AAAAAA; color: #000; }
+        .color-6 { background-color: #F012BE; color: #fff; }
+        .color-7 { background-color: #FF851B; color: #fff; }
+        .color-8 { background-color: #7FDBCA; color: #000; }
+        .color-9 { background-color: #870C25; color: #fff; }
+
+        /* Palette */
+        .palette {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            border: 1px solid #333;
+            background-color: #fff;
+            padding: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            z-index: 1000;
+        }
+
+        .palette-row {
+            display: flex;
+            gap: 0.3rem;
+        }
+
+        .palette-color {
+            width: 30px;
+            height: 30px;
+            border: 2px solid #ccc;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .palette-color:hover {
+            border-color: #333;
+            transform: scale(1.1);
+        }
+
+        .palette-color.selected {
+            border-color: #333;
+            box-shadow: 0 0 0 2px #fff, 0 0 0 4px #333;
+            transform: scale(1.15);
+        }
+
+        .info-panel {
+            border: 1px solid #ddd;
+            padding: 0.5rem;
+            background-color: #f9f9f9;
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-panel strong {
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .sidebar-panel {
+            border: 1px solid #ddd;
+            padding: 1rem;
+            background-color: #fff;
+        }
+
+        .sidebar-panel h3 {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 0.5rem;
+        }
+
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .task-item {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            background-color: #fff;
+            transition: all 0.2s;
+            margin-bottom: 0.3rem;
+        }
+
+        .task-item:hover {
+            background-color: #f0f0f0;
+            border-color: #333;
+        }
+
+        .task-item.active {
+            background-color: #333;
+            color: #fff;
+            border-color: #333;
+        }
+
+        .task-item-name {
+            font-weight: bold;
+            margin-bottom: 0.2rem;
+        }
+
+        .task-item-tags {
+            font-size: 0.7rem;
+            color: #666;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.2rem;
+        }
+
+        .task-item.active .task-item-tags {
+            color: #ccc;
+        }
+
+        .tag {
+            background-color: #e8e8e8;
+            padding: 0.1rem 0.3rem;
+            border-radius: 2px;
+            font-size: 0.7rem;
+        }
+
+        .task-item.active .tag {
+            background-color: #555;
+            color: #fff;
+        }
+
+        .status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background-color: #fff;
+            border-top: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            padding: 0 1rem;
+            font-size: 0.8rem;
+            gap: 2rem;
+        }
+
+        .status-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .help-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid #333;
+            background-color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            z-index: 999;
+            transition: all 0.2s;
+        }
+
+        .help-button:hover {
+            background-color: #333;
+            color: #fff;
+            transform: scale(1.1);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            border: 1px solid #333;
+            padding: 2rem;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-close {
+            float: right;
+            cursor: pointer;
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+
+        .modal h2 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            clear: both;
+        }
+
+        .hotkey-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .hotkey-table th,
+        .hotkey-table td {
+            border: 1px solid #ddd;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .hotkey-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+
+        .hotkey-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .hotkey-table tr:hover {
+            background-color: #f0f0f0;
+        }
+
+        body {
+            padding-bottom: 50px;
+        }
+
+        .grid-info {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        .keyboard-hint {
+            font-size: 0.75rem;
+            color: #999;
+            margin-top: 0.3rem;
+            font-style: italic;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+        }
+
+        .button-group button {
+            flex: 1;
+            min-width: 80px;
+        }
+
+        .grid-controls {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .size-input {
+            width: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ARC Task Creator</h1>
+        </header>
+
+        <div class="main-layout">
+            <div class="editor-section">
+                <!-- Task Controls -->
+                <div class="task-controls">
+                    <div class="task-info">
+                        <input type="text" id="taskName" placeholder="Task name">
+                        <textarea id="taskDescription" placeholder="Task description" style="min-height: 60px; flex: 1; min-width: 300px;"></textarea>
+                        <input type="text" id="taskTags" placeholder="Tags (comma-separated)" style="flex: 1; min-width: 200px;">
+                    </div>
+                    <button onclick="createNewTask()">New Task</button>
+                    <button onclick="exportJSON()">Export Tasks</button>
+                    <button onclick="exportTestOutputs()">Export Test Outputs</button>
+                    <button onclick="document.getElementById('importFile').click()">Import Tasks</button>
+                    <button onclick="document.getElementById('importTestOutputsFile').click()">Import Test Outputs</button>
+                    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importJSON(event)">
+                    <input type="file" id="importTestOutputsFile" accept=".json" style="display: none;" onchange="importTestOutputs(event)">
+                </div>
+
+                <!-- Example Section -->
+                <div class="example-section">
+                    <div class="example-tabs">
+                        <button class="example-tab active" onclick="switchExampleTab('train')">Train</button>
+                        <button class="example-tab" onclick="switchExampleTab('test')">Test</button>
+                    </div>
+
+                    <div id="train-tab" class="example-content active">
+                        <div class="grid-controls">
+                            <label>Train Examples:</label>
+                            <select id="trainSelect" onchange="loadTrainExample(this.value)">
+                                <option value="">Select example...</option>
+                            </select>
+                            <button onclick="addTrainExample()">Add</button>
+                            <button onclick="deleteTrainExample()">Delete</button>
+                            <button onclick="duplicateInputToOutput()" title="Ctrl+D">Copy Input→Output</button>
+                        </div>
+                        <div style="margin-top: 1rem;">
+                            <h3>Input</h3>
+                            <div class="grid-controls" style="margin-bottom: 0.5rem;">
+                                <label>Size:</label>
+                                <input type="text" id="trainInputSize" class="size-input" placeholder="e.g., 5x5" onchange="resizeTrainInput()">
+                            </div>
+                            <div class="keyboard-hint">Tip: Use 0-9 to select colors, drag to paint, Alt+size to resize</div>
+                            <div id="trainInputGrid" class="grid-wrapper"></div>
+                            <h3 style="margin-top: 1rem;">Output</h3>
+                            <div class="grid-controls" style="margin-bottom: 0.5rem;">
+                                <label>Size:</label>
+                                <input type="text" id="trainOutputSize" class="size-input" placeholder="e.g., 5x5" onchange="resizeTrainOutput()">
+                            </div>
+                            <div id="trainOutputGrid" class="grid-wrapper"></div>
+                            <div class="keyboard-hint">Tip: Ctrl+C to copy, Ctrl+V to paste</div>
+                        </div>
+                    </div>
+
+                    <div id="test-tab" class="example-content">
+                        <div class="grid-controls">
+                            <label>Test Examples:</label>
+                            <select id="testSelect" onchange="loadTestExample(this.value)">
+                                <option value="">Select example...</option>
+                            </select>
+                            <button onclick="addTestExample()">Add</button>
+                            <button onclick="deleteTestExample()">Delete</button>
+                            <button onclick="duplicateInputToOutput()" title="Ctrl+D">Copy Input→Output</button>
+                        </div>
+                        <div style="margin-top: 1rem;">
+                            <h3>Input</h3>
+                            <div class="grid-controls" style="margin-bottom: 0.5rem;">
+                                <label>Size:</label>
+                                <input type="text" id="testInputSize" class="size-input" placeholder="e.g., 5x5" onchange="resizeTestInput()">
+                            </div>
+                            <div class="keyboard-hint">Tip: Use 0-9 to select colors, drag to paint</div>
+                            <div id="testInputGrid" class="grid-wrapper"></div>
+                            <h3 style="margin-top: 1rem;">Output (optional)</h3>
+                            <div class="grid-controls" style="margin-bottom: 0.5rem;">
+                                <label>Size:</label>
+                                <input type="text" id="testOutputSize" class="size-input" placeholder="e.g., 5x5" onchange="resizeTestOutput()">
+                            </div>
+                            <div class="keyboard-hint">Tip: Optional - add expected output for validation</div>
+                            <div id="testOutputGrid" class="grid-wrapper"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-panel">
+                    <h3>Tasks</h3>
+                    <input type="text" id="searchTasks" placeholder="Search tasks..." style="width: 100%; margin-bottom: 0.5rem; padding: 0.5rem; border: 1px solid #ccc;">
+                    <div class="task-list" id="taskList"></div>
+                    <button onclick="deleteCurrentTask()" style="width: 100%; margin-top: 0.5rem;">Delete Task</button>
+                    <button onclick="clearAllData()" style="width: 100%; margin-top: 0.5rem; background-color: #ffcccc; color: #cc0000;">Clear All</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Palette -->
+    <div class="palette" id="palette">
+        <div class="palette-row">
+            <div class="palette-color color-0" onclick="selectColor(0)" title="0">0</div>
+            <div class="palette-color color-1" onclick="selectColor(1)" title="1">1</div>
+            <div class="palette-color color-2" onclick="selectColor(2)" title="2">2</div>
+            <div class="palette-color color-3" onclick="selectColor(3)" title="3">3</div>
+            <div class="palette-color color-4" onclick="selectColor(4)" title="4">4</div>
+        </div>
+        <div class="palette-row">
+            <div class="palette-color color-5" onclick="selectColor(5)" title="5">5</div>
+            <div class="palette-color color-6" onclick="selectColor(6)" title="6">6</div>
+            <div class="palette-color color-7" onclick="selectColor(7)" title="7">7</div>
+            <div class="palette-color color-8" onclick="selectColor(8)" title="8">8</div>
+            <div class="palette-color color-9" onclick="selectColor(9)" title="9">9</div>
+        </div>
+    </div>
+
+    <!-- Help Button -->
+    <button class="help-button" onclick="showHotkeyModal()">?</button>
+
+    <!-- Hotkey Modal -->
+    <div class="modal" id="hotkeyModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeHotkeyModal()">&times;</span>
+            <h2>Keyboard Shortcuts</h2>
+            <table class="hotkey-table">
+                <thead>
+                    <tr>
+                        <th>Key</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>0-9</strong></td>
+                        <td>Select color from palette</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Drag on grid</strong></td>
+                        <td>Paint multiple cells with selected color</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Alt + size</strong></td>
+                        <td>Resize both input and output grids</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ctrl+Q</strong></td>
+                        <td>Resize only input grid</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ctrl+A</strong></td>
+                        <td>Resize only output grid</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ctrl+D</strong></td>
+                        <td>Duplicate input to output</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ctrl+C / Cmd+C</strong></td>
+                        <td>Copy current grid</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ctrl+V / Cmd+V</strong></td>
+                        <td>Paste copied grid</td>
+                    </tr>
+                    <tr>
+                        <td><strong>?</strong></td>
+                        <td>Show this help modal</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="status-item">
+            <span>Current color:</span>
+            <span id="currentColor" style="width: 20px; height: 20px; border: 1px solid #333; display: inline-block;" class="color-0"></span>
+        </div>
+        <div class="status-item">
+            <span id="statusMessage">Ready</span>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let appState = {
+            tasks: [],
+            currentTaskId: null,
+            currentColor: 0,
+            currentTab: 'train',
+            selectedCells: [],
+            copiedCells: null,
+            altPressed: false,
+            isDrawing: false,
+            lastActiveGrid: 'input',
+            autoSaveInterval: null,
+            searchQuery: '',
+            filteredTasks: []
+        };
+
+        // Initialize app
+        function init() {
+            loadFromLocalStorage();
+            if (appState.tasks.length === 0) {
+                createNewTask();
+            } else {
+                selectTask(appState.tasks[0].id);
+            }
+            setupEventListeners();
+            renderTaskList();
+            startAutoSave();
+        }
+
+        // Auto-save functionality
+        function startAutoSave() {
+            appState.autoSaveInterval = setInterval(() => {
+                saveToLocalStorage();
+            }, 5000); // Auto-save every 5 seconds
+        }
+
+        // Event listeners
+        function setupEventListeners() {
+            // Keyboard shortcuts
+            document.addEventListener('keydown', handleKeyDown);
+            document.addEventListener('keyup', handleKeyUp);
+
+
+        }
+
+        function handleKeyDown(e) {
+            // Check if focus is on an input element
+            const isInputFocused = isInInputField(document.activeElement);
+
+            // Color selection 0-9
+            if (e.key >= '0' && e.key <= '9' && !isInputFocused && !e.ctrlKey && !e.metaKey) {
+                selectColor(parseInt(e.key));
+                e.preventDefault();
+                updateStatusBar(`Color selected: ${e.key}`);
+            }
+
+            // Alt for size input (set flag, prevent default) - resizes both input and output
+            if (e.key === 'Alt') {
+                appState.altPressed = true;
+                e.preventDefault(); // Prevent browser menu
+            }
+
+            // Alt + size input (check if Alt is down and a number is pressed)
+            if (appState.altPressed && e.key.match(/^[0-9]$/) && !isInputFocused) {
+                showSizeInputDialog('both');
+                appState.altPressed = false; // Reset flag after use
+                e.preventDefault();
+            }
+
+            // Ctrl+Q - resize only input
+            if ((e.ctrlKey || e.metaKey) && e.key === 'q' && !isInputFocused) {
+                showSizeInputDialog('input');
+                e.preventDefault();
+            }
+
+            // Ctrl+A - resize only output
+            if ((e.ctrlKey || e.metaKey) && e.key === 'a' && !isInputFocused) {
+                showSizeInputDialog('output');
+                e.preventDefault();
+            }
+
+            // Ctrl+D - duplicate input to output
+            if ((e.ctrlKey || e.metaKey) && e.key === 'd' && !isInputFocused) {
+                duplicateInputToOutput();
+                e.preventDefault();
+            }
+
+            // Copy
+            if ((e.ctrlKey || e.metaKey) && e.key === 'c' && !isInputFocused) {
+                copyCells();
+                e.preventDefault();
+            }
+
+            // Paste
+            if ((e.ctrlKey || e.metaKey) && e.key === 'v' && !isInputFocused) {
+                pasteCells();
+                e.preventDefault();
+            }
+
+            // Help
+            if (e.key === '?' && !isInputFocused) {
+                showHotkeyModal();
+                e.preventDefault();
+            }
+        }
+
+        function isInInputField(element) {
+            return element.tagName === 'INPUT' || element.tagName === 'TEXTAREA' || element.contentEditable === 'true' || element.classList.contains('size-input');
+        }
+
+        function handleKeyUp(e) {
+            if (e.key === 'Alt') {
+                appState.altPressed = false;
+            }
+        }
+
+        // Prevent Alt from opening browser menu globally and aggressively
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Alt') {
+                e.preventDefault();
+            }
+        }, true);
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'Alt') {
+                e.preventDefault();
+            }
+        }, true);
+
+        // Color selection
+        function selectColor(colorNum) {
+            appState.currentColor = colorNum;
+            updatePaletteUI();
+            updateStatusBar(`Color ${colorNum} selected`);
+        }
+
+        function updatePaletteUI() {
+            document.querySelectorAll('.palette-color').forEach((el, idx) => {
+                el.classList.toggle('selected', idx === appState.currentColor);
+            });
+        }
+
+        // Grid creation and rendering
+        function createGrid(rows, cols) {
+            const grid = [];
+            for (let i = 0; i < rows; i++) {
+                grid.push(Array(cols).fill(0));
+            }
+            return grid;
+        }
+
+        function renderGrid(gridData, containerId, isEditable = true) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            gridData.forEach((row, rowIdx) => {
+                const rowEl = document.createElement('div');
+                rowEl.className = 'grid-row';
+
+                row.forEach((color, colIdx) => {
+                    const cellEl = document.createElement('div');
+                    cellEl.className = `grid-cell color-${color}`;
+                    cellEl.textContent = color;
+                    cellEl.dataset.row = rowIdx;
+                    cellEl.dataset.col = colIdx;
+
+                    if (isEditable) {
+                        cellEl.addEventListener('mousedown', (e) => startDrawing(e, containerId));
+                        cellEl.addEventListener('mouseenter', (e) => continueDrawing(e, containerId));
+                        cellEl.addEventListener('mouseup', stopDrawing);
+                        cellEl.addEventListener('mouseleave', (e) => {
+                            if (!appState.isDrawing) return;
+                        });
+                    }
+
+                    rowEl.appendChild(cellEl);
+                });
+
+                container.appendChild(rowEl);
+            });
+        }
+
+        // Drawing functionality
+        function startDrawing(e, containerId) {
+            if (e.button !== 0) return; // Only left mouse button
+            appState.isDrawing = true;
+            paintCell(e, containerId);
+        }
+
+        function continueDrawing(e, containerId) {
+            if (!appState.isDrawing) return;
+            paintCell(e, containerId);
+        }
+
+        function stopDrawing() {
+            appState.isDrawing = false;
+        }
+
+        function paintCell(e, containerId) {
+            const cell = e.target;
+            if (!cell.classList.contains('grid-cell')) return;
+
+            const rowIdx = parseInt(cell.dataset.row);
+            const colIdx = parseInt(cell.dataset.col);
+
+            const task = getCurrentTask();
+            if (!task) return;
+
+            let grid;
+            if (containerId === 'trainInputGrid') {
+                grid = task.examples.train[task.currentTrainExample].input;
+                appState.lastActiveGrid = 'input';
+            } else if (containerId === 'trainOutputGrid') {
+                grid = task.examples.train[task.currentTrainExample].output;
+                appState.lastActiveGrid = 'output';
+            } else if (containerId === 'testInputGrid') {
+                grid = task.examples.test[task.currentTestExample].input;
+                appState.lastActiveGrid = 'input';
+            } else if (containerId === 'testOutputGrid') {
+                grid = task.examples.test[task.currentTestExample].output;
+                appState.lastActiveGrid = 'output';
+            }
+
+            if (grid && rowIdx < grid.length && colIdx < grid[0].length) {
+                grid[rowIdx][colIdx] = appState.currentColor;
+                renderGrid(grid, containerId, true);
+                saveToLocalStorage();
+            }
+        }
+
+        // Task management
+        function createNewTask() {
+            const task = {
+                id: Date.now().toString(),
+                name: `Task ${appState.tasks.length + 1}`,
+                description: '',
+                tags: [],
+                examples: {
+                    train: [
+                        {
+                            input: createGrid(3, 3),
+                            output: createGrid(3, 3)
+                        }
+                    ],
+                    test: [
+                        {
+                            input: createGrid(3, 3),
+                            output: createGrid(3, 3)
+                        }
+                    ]
+                },
+                currentTrainExample: 0,
+                currentTestExample: 0
+            };
+
+            appState.tasks.push(task);
+            selectTask(task.id);
+            renderTaskList();
+            saveToLocalStorage();
+            updateStatusBar(`New task created: ${task.name}`);
+        }
+
+        function selectTask(taskId) {
+            appState.currentTaskId = taskId;
+            const task = getCurrentTask();
+            if (task) {
+                document.getElementById('taskName').value = task.name;
+                document.getElementById('taskDescription').value = task.description;
+                document.getElementById('taskTags').value = task.tags ? task.tags.join(', ') : '';
+                loadTrainExample(task.currentTrainExample);
+                loadTestExample(task.currentTestExample);
+                renderTaskList();
+                updateStatusBar();
+                updateStatusBar(`Task selected: ${task.name}`);
+            }
+        }
+
+        function getCurrentTask() {
+            return appState.tasks.find(t => t.id === appState.currentTaskId);
+        }
+
+        function deleteCurrentTask() {
+            if (appState.tasks.length <= 1) {
+                updateStatusBar('Cannot delete the last task');
+                return;
+            }
+
+            const taskName = getCurrentTask().name;
+            appState.tasks = appState.tasks.filter(t => t.id !== appState.currentTaskId);
+            appState.currentTaskId = appState.tasks[0].id;
+            selectTask(appState.currentTaskId);
+            saveToLocalStorage();
+            updateStatusBar(`Task "${taskName}" deleted`);
+        }
+
+        function renderTaskList() {
+            const list = document.getElementById('taskList');
+            list.innerHTML = '';
+
+            // Use filtered tasks if search is active, otherwise use all tasks
+            const tasksToDisplay = appState.searchQuery ? appState.filteredTasks : appState.tasks;
+
+            if (tasksToDisplay.length === 0) {
+                const emptyMsg = document.createElement('div');
+                emptyMsg.style.padding = '0.5rem';
+                emptyMsg.style.color = '#999';
+                emptyMsg.textContent = appState.searchQuery ? 'No tasks found' : 'No tasks';
+                list.appendChild(emptyMsg);
+                return;
+            }
+
+            tasksToDisplay.forEach(task => {
+                const item = document.createElement('div');
+                item.className = `task-item ${task.id === appState.currentTaskId ? 'active' : ''}`;
+                
+                // Create task item content
+                const nameEl = document.createElement('div');
+                nameEl.className = 'task-item-name';
+                nameEl.textContent = task.name || 'Untitled Task';
+                item.appendChild(nameEl);
+
+                // Add tags if present
+                if (task.tags && task.tags.length > 0) {
+                    const tagsEl = document.createElement('div');
+                    tagsEl.className = 'task-item-tags';
+                    task.tags.forEach(tag => {
+                        const tagEl = document.createElement('span');
+                        tagEl.className = 'tag';
+                        tagEl.textContent = tag;
+                        tagsEl.appendChild(tagEl);
+                    });
+                    item.appendChild(tagsEl);
+                }
+
+                item.onclick = () => selectTask(task.id);
+                list.appendChild(item);
+            });
+        }
+
+        function searchTasks(query) {
+            appState.searchQuery = query.toLowerCase().trim();
+            
+            if (!appState.searchQuery) {
+                appState.filteredTasks = [];
+                renderTaskList();
+                return;
+            }
+
+            appState.filteredTasks = appState.tasks.filter(task => {
+                const nameMatch = task.name.toLowerCase().includes(appState.searchQuery);
+                const descMatch = task.description.toLowerCase().includes(appState.searchQuery);
+                const tagsMatch = task.tags && task.tags.some(tag => tag.toLowerCase().includes(appState.searchQuery));
+                
+                return nameMatch || descMatch || tagsMatch;
+            });
+
+            renderTaskList();
+        }
+
+        function addTag(tag) {
+            const task = getCurrentTask();
+            if (!task) return;
+
+            tag = tag.trim().toLowerCase();
+            if (!tag || task.tags.includes(tag)) return;
+
+            task.tags.push(tag);
+            renderTaskList();
+            saveToLocalStorage();
+            updateStatusBar(`Tag "${tag}" added`);
+        }
+
+        function removeTag(tag) {
+            const task = getCurrentTask();
+            if (!task) return;
+
+            task.tags = task.tags.filter(t => t !== tag);
+            renderTaskList();
+            saveToLocalStorage();
+            updateStatusBar(`Tag "${tag}" removed`);
+        }
+
+        // Example management
+        function addTrainExample() {
+            const task = getCurrentTask();
+            if (!task) return;
+
+            task.examples.train.push({
+                input: createGrid(3, 3),
+                output: createGrid(3, 3)
+            });
+
+            task.currentTrainExample = task.examples.train.length - 1;
+            loadTrainExample(task.currentTrainExample);
+            saveToLocalStorage();
+            updateStatusBar(`Train example ${task.currentTrainExample + 1} added`);
+        }
+
+        function deleteTrainExample() {
+            const task = getCurrentTask();
+            if (!task || task.examples.train.length <= 1) {
+                updateStatusBar('Cannot delete the last example');
+                return;
+            }
+
+            task.examples.train.splice(task.currentTrainExample, 1);
+            task.currentTrainExample = Math.min(task.currentTrainExample, task.examples.train.length - 1);
+            loadTrainExample(task.currentTrainExample);
+            saveToLocalStorage();
+            updateStatusBar(`Train example deleted`);
+        }
+
+        function loadTrainExample(idx) {
+            const task = getCurrentTask();
+            if (!task) return;
+
+            task.currentTrainExample = parseInt(idx);
+            const example = task.examples.train[task.currentTrainExample];
+
+            document.getElementById('trainSelect').value = task.currentTrainExample;
+            document.getElementById('trainInputSize').value = `${example.input.length}x${example.input[0].length}`;
+            document.getElementById('trainOutputSize').value = `${example.output.length}x${example.output[0].length}`;
+
+            renderGrid(example.input, 'trainInputGrid', true);
+            renderGrid(example.output, 'trainOutputGrid', true);
+
+            updateTrainExampleSelect();
+        }
+
+        function updateTrainExampleSelect() {
+            const task = getCurrentTask();
+            const select = document.getElementById('trainSelect');
+            select.innerHTML = '';
+
+            task.examples.train.forEach((_, idx) => {
+                const option = document.createElement('option');
+                option.value = idx;
+                option.textContent = `Example ${idx + 1}`;
+                select.appendChild(option);
+            });
+
+            select.value = task.currentTrainExample;
+        }
+
+        function addTestExample() {
+            const task = getCurrentTask();
+            if (!task) return;
+
+            task.examples.test.push({
+                input: createGrid(3, 3),
+                output: createGrid(3, 3)
+            });
+
+            task.currentTestExample = task.examples.test.length - 1;
+            loadTestExample(task.currentTestExample);
+            saveToLocalStorage();
+            updateStatusBar(`Test example ${task.currentTestExample + 1} added`);
+        }
+
+        function deleteTestExample() {
+            const task = getCurrentTask();
+            if (!task || task.examples.test.length <= 1) {
+                updateStatusBar('Cannot delete the last example');
+                return;
+            }
+
+            task.examples.test.splice(task.currentTestExample, 1);
+            task.currentTestExample = Math.min(task.currentTestExample, task.examples.test.length - 1);
+            loadTestExample(task.currentTestExample);
+            saveToLocalStorage();
+            updateStatusBar(`Test example deleted`);
+        }
+
+        function loadTestExample(idx) {
+            const task = getCurrentTask();
+            if (!task) return;
+
+            task.currentTestExample = parseInt(idx);
+            const example = task.examples.test[task.currentTestExample];
+
+            document.getElementById('testSelect').value = task.currentTestExample;
+            document.getElementById('testInputSize').value = `${example.input.length}x${example.input[0].length}`;
+            document.getElementById('testOutputSize').value = `${example.output.length}x${example.output[0].length}`;
+
+            renderGrid(example.input, 'testInputGrid', true);
+            renderGrid(example.output, 'testOutputGrid', true);
+
+            updateTestExampleSelect();
+        }
+
+        function updateTestExampleSelect() {
+            const task = getCurrentTask();
+            const select = document.getElementById('testSelect');
+            select.innerHTML = '';
+
+            task.examples.test.forEach((_, idx) => {
+                const option = document.createElement('option');
+                option.value = idx;
+                option.textContent = `Example ${idx + 1}`;
+                select.appendChild(option);
+            });
+
+            select.value = task.currentTestExample;
+        }
+
+        // Tab switching
+        function switchExampleTab(tab) {
+            appState.currentTab = tab;
+            saveToLocalStorage();
+
+            document.querySelectorAll('.example-tab').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelectorAll('.example-content').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            event.target.classList.add('active');
+            document.getElementById(`${tab}-tab`).classList.add('active');
+        }
+
+        // Grid resizing
+        function resizeTrainInput() {
+            resizeGrid('trainInputSize', 'trainInputGrid', 'train', 'input');
+        }
+
+        function resizeTrainOutput() {
+            resizeGrid('trainOutputSize', 'trainOutputGrid', 'train', 'output');
+        }
+
+        function resizeTestInput() {
+            resizeGrid('testInputSize', 'testInputGrid', 'test', 'input');
+        }
+
+        function resizeTestOutput() {
+            resizeGrid('testOutputSize', 'testOutputGrid', 'test', 'output');
+        }
+
+        function resizeGrid(inputId, containerId, exampleType, gridType) {
+            const sizeStr = document.getElementById(inputId).value;
+            const match = sizeStr.match(/(\d+)x(\d+)/);
+
+            if (!match) {
+                updateStatusBar('Invalid size format. Use: WxH (e.g., 5x5)');
+                return;
+            }
+
+            const task = getCurrentTask();
+            if (!task) return;
+
+            const rows = parseInt(match[2]);
+            const cols = parseInt(match[1]);
+
+            // Validate size
+            if (rows < 1 || cols < 1 || rows > 100 || cols > 100) {
+                updateStatusBar('Grid size must be between 1x1 and 100x100');
+                return;
+            }
+
+            let example;
+            if (exampleType === 'train') {
+                example = task.examples.train[task.currentTrainExample];
+            } else {
+                example = task.examples.test[task.currentTestExample];
+            }
+
+            const oldGrid = example[gridType];
+            const newGrid = createGrid(rows, cols);
+
+            // Copy old values where they fit
+            for (let i = 0; i < Math.min(rows, oldGrid.length); i++) {
+                for (let j = 0; j < Math.min(cols, oldGrid[0].length); j++) {
+                    newGrid[i][j] = oldGrid[i][j];
+                }
+            }
+
+            example[gridType] = newGrid;
+            renderGrid(newGrid, containerId, true);
+            saveToLocalStorage();
+            updateStatusBar(`Grid resized to ${cols}x${rows}`);
+        }
+
+        // Size input dialog
+        function showSizeInputDialog(resizeMode = 'both') {
+            const task = getCurrentTask();
+            if (!task) return;
+
+            const example = appState.currentTab === 'train'
+                ? task.examples.train[task.currentTrainExample]
+                : task.examples.test[task.currentTestExample];
+
+            const currentSize = `${example.input[0].length}x${example.input.length}`;
+            let prompt_text = 'Enter new grid size (e.g., 10x10):';
+            
+            if (resizeMode === 'input') {
+                prompt_text = 'Enter new INPUT grid size (e.g., 10x10):';
+            } else if (resizeMode === 'output') {
+                prompt_text = 'Enter new OUTPUT grid size (e.g., 10x10):';
+            }
+
+            const newSize = prompt(prompt_text, currentSize);
+
+            if (newSize) {
+                const match = newSize.match(/(\d+)x(\d+)/);
+                if (match) {
+                    const cols = parseInt(match[1]);
+                    const rows = parseInt(match[2]);
+
+                    // Validate size
+                    if (rows < 1 || cols < 1 || rows > 100 || cols > 100) {
+                        updateStatusBar('Grid size must be between 1x1 and 100x100');
+                        return;
+                    }
+
+                    // Resize input if needed
+                    if (resizeMode === 'both' || resizeMode === 'input') {
+                        const newInput = createGrid(rows, cols);
+                        for (let i = 0; i < Math.min(rows, example.input.length); i++) {
+                            for (let j = 0; j < Math.min(cols, example.input[0].length); j++) {
+                                newInput[i][j] = example.input[i][j];
+                            }
+                        }
+                        example.input = newInput;
+                    }
+
+                    // Resize output if needed
+                    if (resizeMode === 'both' || resizeMode === 'output') {
+                        const newOutput = createGrid(rows, cols);
+                        for (let i = 0; i < Math.min(rows, example.output.length); i++) {
+                            for (let j = 0; j < Math.min(cols, example.output[0].length); j++) {
+                                newOutput[i][j] = example.output[i][j];
+                            }
+                        }
+                        example.output = newOutput;
+                    }
+
+                    if (appState.currentTab === 'train') {
+                        loadTrainExample(task.currentTrainExample);
+                    } else {
+                        loadTestExample(task.currentTestExample);
+                    }
+
+                    saveToLocalStorage();
+                    const modeText = resizeMode === 'input' ? 'INPUT' : resizeMode === 'output' ? 'OUTPUT' : '';
+                    updateStatusBar(`${modeText} grid resized to ${cols}x${rows}`.trim());
+                } else {
+                    updateStatusBar('Invalid size format. Use: WxH (e.g., 5x5)');
+                }
+            }
+        }
+
+        // Duplicate input to output
+        function duplicateInputToOutput() {
+            const task = getCurrentTask();
+            if (!task) return;
+
+            let example;
+            if (appState.currentTab === 'train') {
+                example = task.examples.train[task.currentTrainExample];
+            } else {
+                example = task.examples.test[task.currentTestExample];
+            }
+
+            // Deep copy input to output
+            example.output = JSON.parse(JSON.stringify(example.input));
+
+            if (appState.currentTab === 'train') {
+                loadTrainExample(task.currentTrainExample);
+            } else {
+                loadTestExample(task.currentTestExample);
+            }
+
+            saveToLocalStorage();
+            updateStatusBar('Input duplicated to Output');
+        }
+
+        // Copy and paste
+        function copyCells() {
+            // Get current grid based on tab
+            const task = getCurrentTask();
+            if (!task) return;
+
+            let grid;
+            if (appState.currentTab === 'train') {
+                const example = task.examples.train[task.currentTrainExample];
+                grid = appState.lastActiveGrid === 'output' ? example.output : example.input;
+            } else {
+                const example = task.examples.test[task.currentTestExample];
+                grid = appState.lastActiveGrid === 'output' ? example.output : example.input;
+            }
+
+            appState.copiedCells = JSON.parse(JSON.stringify(grid));
+            updateStatusBar(`Grid copied (${grid.length}x${grid[0].length})`);
+        }
+
+        function pasteCells() {
+            if (!appState.copiedCells) {
+                updateStatusBar('Nothing to paste');
+                return;
+            }
+
+            const task = getCurrentTask();
+            if (!task) return;
+
+            let grid;
+            let containerId;
+            if (appState.currentTab === 'train') {
+                const example = task.examples.train[task.currentTrainExample];
+                if (appState.lastActiveGrid === 'output') {
+                    grid = example.output;
+                    containerId = 'trainOutputGrid';
+                } else {
+                    grid = example.input;
+                    containerId = 'trainInputGrid';
+                }
+            } else {
+                const example = task.examples.test[task.currentTestExample];
+                if (appState.lastActiveGrid === 'output') {
+                    grid = example.output;
+                    containerId = 'testOutputGrid';
+                } else {
+                    grid = example.input;
+                    containerId = 'testInputGrid';
+                }
+            }
+
+            // Paste from top-left corner
+            const rows = Math.min(appState.copiedCells.length, grid.length);
+            const cols = Math.min(appState.copiedCells[0].length, grid[0].length);
+
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    grid[i][j] = appState.copiedCells[i][j];
+                }
+            }
+
+            renderGrid(grid, containerId, true);
+            saveToLocalStorage();
+            updateStatusBar(`Grid pasted (${rows}x${cols})`);
+        }
+
+        // Fill grid with color
+        function fillGrid(color) {
+            const task = getCurrentTask();
+            if (!task) return;
+
+            let grid;
+            let containerId;
+            if (appState.currentTab === 'train') {
+                const example = task.examples.train[task.currentTrainExample];
+                if (appState.lastActiveGrid === 'output') {
+                    grid = example.output;
+                    containerId = 'trainOutputGrid';
+                } else {
+                    grid = example.input;
+                    containerId = 'trainInputGrid';
+                }
+            } else {
+                const example = task.examples.test[task.currentTestExample];
+                if (appState.lastActiveGrid === 'output') {
+                    grid = example.output;
+                    containerId = 'testOutputGrid';
+                } else {
+                    grid = example.input;
+                    containerId = 'testInputGrid';
+                }
+            }
+
+            // Fill entire grid with color
+            for (let i = 0; i < grid.length; i++) {
+                for (let j = 0; j < grid[0].length; j++) {
+                    grid[i][j] = color;
+                }
+            }
+
+            renderGrid(grid, containerId, true);
+            saveToLocalStorage();
+            updateStatusBar(`Grid filled with color ${color}`);
+        }
+
+        // Clear grid
+        function clearGrid() {
+            fillGrid(0);
+            updateStatusBar('Grid cleared');
+        }
+
+        // Export/Import
+        function exportJSON() {
+            const exportData = {
+                version: '1.0',
+                exportDate: new Date().toISOString(),
+                tasks: appState.tasks.map(task => ({
+                    id: task.id,
+                    name: task.name,
+                    description: task.description || '',
+                    tags: task.tags || [],
+                    examples: {
+                        train: task.examples.train.map(ex => ({
+                            input: ex.input,
+                            output: ex.output
+                        })),
+                        test: task.examples.test.map(ex => ({
+                            input: ex.input
+                            // output is excluded from main export
+                        }))
+                    },
+                    currentTrainExample: task.currentTrainExample || 0,
+                    currentTestExample: task.currentTestExample || 0
+                }))
+            };
+
+            const json = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `arc-tasks-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            updateStatusBar('Tasks exported successfully');
+        }
+
+        function exportTestOutputs() {
+            const testOutputs = {};
+            appState.tasks.forEach(task => {
+                testOutputs[task.id] = {
+                    taskName: task.name,
+                    testOutputs: task.examples.test.map((ex, idx) => ({
+                        exampleIndex: idx,
+                        output: ex.output
+                    }))
+                };
+            });
+
+            const json = JSON.stringify(testOutputs, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `arc-test-outputs-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            updateStatusBar('Test outputs exported successfully');
+        }
+
+        function importJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    let tasks;
+
+                    // Handle both old and new format
+                    if (Array.isArray(data)) {
+                        tasks = data;
+                    } else if (data.tasks) {
+                        tasks = data.tasks;
+                    } else {
+                        throw new Error('Invalid JSON format');
+                    }
+
+                    // Ensure all tasks have proper structure
+                    tasks = tasks.map(task => ({
+                        id: task.id || Date.now().toString(),
+                        name: task.name || 'Untitled Task',
+                        description: task.description || '',
+                        tags: Array.isArray(task.tags) ? task.tags : [],
+                        examples: {
+                            train: (task.examples?.train || []).map(ex => ({
+                                input: ex.input || createGrid(3, 3),
+                                output: ex.output || createGrid(3, 3)
+                            })),
+                            test: (task.examples?.test || []).map(ex => ({
+                                input: ex.input || createGrid(3, 3),
+                                output: ex.output || createGrid(3, 3)
+                            }))
+                        },
+                        currentTrainExample: task.currentTrainExample || 0,
+                        currentTestExample: task.currentTestExample || 0
+                    }));
+
+                    appState.tasks = tasks;
+                    appState.currentTaskId = tasks[0].id;
+                    selectTask(appState.currentTaskId);
+                    saveToLocalStorage();
+                    updateStatusBar(`${tasks.length} task(s) imported successfully`);
+                } catch (err) {
+                    updateStatusBar(`Error importing JSON: ${err.message}`);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // Reset file input
+        }
+
+        function importTestOutputs(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const testOutputs = JSON.parse(e.target.result);
+                    let importedCount = 0;
+
+                    appState.tasks.forEach(task => {
+                        if (testOutputs[task.id]) {
+                            const outputs = testOutputs[task.id].testOutputs;
+                            outputs.forEach(item => {
+                                if (task.examples.test[item.exampleIndex]) {
+                                    task.examples.test[item.exampleIndex].output = item.output;
+                                    importedCount++;
+                                }
+                            });
+                        }
+                    });
+
+                    saveToLocalStorage();
+                    updateStatusBar(`${importedCount} test output(s) imported successfully`);
+                } catch (err) {
+                    updateStatusBar(`Error importing test outputs: ${err.message}`);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // Reset file input
+        }
+
+        // Local storage
+        function saveToLocalStorage() {
+            const stateToSave = {
+                tasks: appState.tasks,
+                currentTaskId: appState.currentTaskId,
+                currentColor: appState.currentColor,
+                currentTab: appState.currentTab
+            };
+            localStorage.setItem('arcTaskCreatorState', JSON.stringify(stateToSave));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('arcTaskCreatorState');
+            if (saved) {
+                try {
+                    const state = JSON.parse(saved);
+                    appState.tasks = state.tasks || [];
+                    appState.currentTaskId = state.currentTaskId;
+                    appState.currentColor = state.currentColor || 0;
+                    appState.currentTab = state.currentTab || 'train';
+                    
+                    // Ensure all tasks have proper structure
+                    appState.tasks = appState.tasks.map(task => ({
+                        ...task,
+                        name: task.name || 'Untitled Task',
+                        description: task.description || '',
+                        tags: Array.isArray(task.tags) ? task.tags : []
+                    }));
+                } catch (err) {
+                    console.error('Error loading from localStorage:', err);
+                }
+            }
+        }
+
+        // Clear all data
+        function clearAllData() {
+            if (confirm('Are you sure you want to delete all tasks? This cannot be undone.')) {
+                localStorage.removeItem('arcTaskCreatorState');
+                appState.tasks = [];
+                appState.currentTaskId = null;
+                createNewTask();
+                updateStatusBar('All data cleared');
+            }
+        }
+
+        // UI helpers
+        function updateStatusBar(message = null) {
+            const statusEl = document.getElementById('statusMessage');
+            
+            if (message) {
+                statusEl.textContent = message;
+                // Only auto-clear if it's a temporary message
+                if (!message.includes('Task:')) {
+                    setTimeout(() => {
+                        updateStatusBar();
+                    }, 3000);
+                }
+            } else {
+                const task = getCurrentTask();
+                if (task) {
+                    const trainCount = task.examples.train.length;
+                    const testCount = task.examples.test.length;
+                    statusEl.textContent = `Task: ${task.name} | Train: ${trainCount} | Test: ${testCount}`;
+                } else {
+                    statusEl.textContent = 'Ready';
+                }
+            }
+        }
+
+        function showHotkeyModal() {
+            document.getElementById('hotkeyModal').classList.add('active');
+        }
+
+        function closeHotkeyModal() {
+            document.getElementById('hotkeyModal').classList.remove('active');
+        }
+
+        // Keyboard shortcut reference
+        function getHotkeyReference() {
+            return [
+                { key: '0-9', action: 'Select color from palette' },
+                { key: 'Drag on grid', action: 'Paint multiple cells with selected color' },
+                { key: 'Alt + size', action: 'Resize grid (e.g., Alt, then type "10x10")' },
+                { key: 'Ctrl+C / Cmd+C', action: 'Copy current grid' },
+                { key: 'Ctrl+V / Cmd+V', action: 'Paste copied grid' },
+                { key: '?', action: 'Show this help modal' }
+            ];
+        }
+
+        // Update task name and description
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('taskName').addEventListener('change', (e) => {
+                const task = getCurrentTask();
+                if (task) {
+                    task.name = e.target.value;
+                    renderTaskList();
+                    saveToLocalStorage();
+                }
+            });
+
+            document.getElementById('taskDescription').addEventListener('change', (e) => {
+                const task = getCurrentTask();
+                if (task) {
+                    task.description = e.target.value;
+                    saveToLocalStorage();
+                }
+            });
+
+            // Tags input
+            if (document.getElementById('taskTags')) {
+                document.getElementById('taskTags').addEventListener('change', (e) => {
+                    const task = getCurrentTask();
+                    if (task) {
+                        task.tags = e.target.value
+                            .split(',')
+                            .map(tag => tag.trim().toLowerCase())
+                            .filter(tag => tag.length > 0);
+                        renderTaskList();
+                        saveToLocalStorage();
+                        updateStatusBar('Tags updated');
+                    }
+                });
+            }
+
+            // Search input
+            if (document.getElementById('searchTasks')) {
+                document.getElementById('searchTasks').addEventListener('input', (e) => {
+                    searchTasks(e.target.value);
+                });
+            }
+
+            // Close modal on outside click
+            document.getElementById('hotkeyModal').addEventListener('click', (e) => {
+                if (e.target.id === 'hotkeyModal') {
+                    closeHotkeyModal();
+                }
+            });
+
+            init();
+        });
+    </script>
+</body>
+</html>
