@@ -1,25 +1,36 @@
-# ARCtic-0
+# ARCTIC-0
 
-A public release of the **ARCtic-0** dataset — a hand-authored benchmark of 85
+A public release of the **ARCTIC-0** dataset — a hand-authored benchmark of 85
 grid-reasoning tasks in the [ARC](https://arcprize.org/) (Abstraction and
 Reasoning Corpus) format, together with the task-authoring tool used to create it
 and an analysis notebook for inspecting task metadata.
 
-ARCtic-0 is built around the **Transfer & Induction Core** (TIC) idea: tasks are
+ARCTIC-0 is built around the **Transfer & Induction Core** (TIC) idea: tasks are
 grouped by reasoning *skills* via tags (e.g. `predict`, `intersection`,
 `segmentation`, `torus`, `fill`) and by *difficulty* (`easy` / `medium` /
 `hard` / `expert`), so models can be evaluated not only on overall accuracy but
 on which kinds of abstraction they generalize to.
 
+## Examples
+
+Example tasks from the ARCTIC-0 dataset (input → output):
+
+<p>
+  <img src="png/0xfbd62cd.png" width="240" alt="ARCTIC-0 example task">
+  &nbsp;&nbsp;
+  <img src="png/0xac284ba.png" width="200" alt="ARCTIC-0 example task">
+</p>
+
 ## Repository structure
 
 ```
 .
-├── arc-task-editor.html          # Single-file browser tool to author/edit ARC tasks
+├── arc-task-editor.html              # Single-file browser tool to author/edit ARC tasks
 ├── dataset/
-│   ├── arctic-0-85-0.6.json      # Full dataset: 85 tasks (train + test examples), tags, descriptions
-│   └── arctic-0-85-0.6.1_test.json  # Reference test outputs (answer key) for the 85 tasks
-└── tags_analysis.ipynb           # Notebook analysing tag frequency / difficulty distribution
+│   ├── arctic-0-85-0.6.2.json        # Full dataset: 85 tasks (train + test examples), tags, descriptions
+│   └── arctic-0-85-0.6.2_test.json   # Reference test outputs (answer key) for the 85 tasks
+├── png/                              # Sample task visualizations
+└── tags_analysis.ipynb               # Notebook analysing tag frequency / difficulty distribution
 ```
 
 ## Dataset
@@ -27,7 +38,7 @@ on which kinds of abstraction they generalize to.
 The dataset is distributed as JSON. Each task is a set of input/output grid
 pairs using the standard ARC 10-color palette (`0`–`9`).
 
-### Full dataset — `dataset/arctic-0-85-0.6.json`
+### Full dataset — `dataset/arctic-0-85-0.6.2.json`
 
 Top-level object:
 
@@ -53,7 +64,7 @@ Each task object:
 Each example is `{ "input": [[int,...],...], "output": [[int,...],...] }`, where
 every cell is an integer `0`–`9` representing an ARC color.
 
-### Reference outputs — `dataset/arctic-0-85-0.6.1_test.json`
+### Reference outputs — `dataset/arctic-0-85-0.6.2_test.json`
 
 Maps task `id` → reference test outputs, for scoring model predictions:
 
@@ -68,16 +79,16 @@ Maps task `id` → reference test outputs, for scoring model predictions:
 }
 ```
 
-### Statistics (v0.6 / 0.6.1)
+### Statistics
 
 | Metric                      | Value |
 |-----------------------------|-------|
 | Tasks                       | 85    |
-| Unique tags                 | 87    |
+| Unique tags                 | 88    |
 | Training examples (total)   | 211   |
-| Test examples (total)       | 86    |
+| Test examples (total)       | 85    |
 | Avg. training pairs/task    | 2.48  |
-| Avg. test pairs/task        | 1.01  |
+| Avg. test pairs/task        | 1.00  |
 
 Difficulty distribution (by tag):
 
@@ -120,7 +131,7 @@ Keyboard shortcuts (press `?` in the app for the full list):
 
 ## Analysis notebook
 
-`tags_analysis.ipynb` loads `dataset/arctic-0-85-0.6.json` and produces a
+`tags_analysis.ipynb` loads `dataset/arctic-0-85-0.6.2.json` and produces a
 summary of tag frequencies and the difficulty distribution (bar charts via
 matplotlib/seaborn). It requires Python with `matplotlib`, `pandas`, and
 `seaborn`:
@@ -135,7 +146,7 @@ jupyter notebook tags_analysis.ipynb
 ```python
 import json
 
-with open("dataset/arctic-0-85-0.6.json") as f:
+with open("dataset/arctic-0-85-0.6.2.json") as f:
     data = json.load(f)
 
 for task in data["tasks"]:
@@ -145,28 +156,24 @@ for task in data["tasks"]:
         # ...your solver...
 ```
 
-## Versioning
-
-Releases are named `arctic-0-<taskCount>-<datasetVersion>.json`
-(e.g. `arctic-0-85-0.6.json`). The companion reference-outputs file carries an
-extra patch segment (`0.6.1`) to allow independent updates to the answer key.
-
 ## License
 
 - **Code** (`arc-task-editor.html`): [MIT License](./LICENSE).
 - **Dataset** (`dataset/`): [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
 By using this dataset you agree to the applicable license terms. If you use
-ARCtic-0 in your work, please cite this repository.
+ARCTIC-0 in your work, please cite this repository.
 
 ## Citation
 
 ```bibtex
 @misc{arctic0,
-  title  = {ARCtic-0: A grid-reasoning benchmark (Transfer \& Induction Core)},
-  author = {ARCtic Contributors},
+  title  = {ARCTIC: Open Benchmark and Public Runtime for Transfer \& Induction},
+  author = {Alex Zhdanov and Artem-Darius Weber and Egor Kolychev and
+            Artem Ligostaev and Veronika Rastorgueva and
+            Prutskii, Alekseii Sergeevich},
   year   = {2026},
-  note   = {Dataset and task editor, version 0.6},
-  url    = {https://github.com/<org>/arctic-0}
+  note   = {Dataset and task editor, version 0.6.2},
+  url    = {https://github.com/opensiro/arctic-0}
 }
 ```
