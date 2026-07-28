@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "exportDate": "2026-01-27T13:52:36.251Z",
+  "exportDate": "2026-07-27T23:59:41.220Z",
   "tasks": [
     {
       "id": "1766161329323",
@@ -870,29 +870,10 @@
                 0
               ]
             ]
-          },
-          {
-            "input": [
-              [
-                0,
-                0,
-                0
-              ],
-              [
-                0,
-                0,
-                0
-              ],
-              [
-                0,
-                0,
-                0
-              ]
-            ]
           }
         ]
       },
-      "currentTrainExample": 1,
+      "currentTrainExample": 0,
       "currentTestExample": 0
     },
     {
@@ -14873,7 +14854,7 @@
           }
         ]
       },
-      "currentTrainExample": 1,
+      "currentTrainExample": 2,
       "currentTestExample": 0
     },
     {
@@ -17039,7 +17020,7 @@
           }
         ]
       },
-      "currentTrainExample": 1,
+      "currentTrainExample": 0,
       "currentTestExample": 0
     },
     {
@@ -17911,7 +17892,7 @@
           }
         ]
       },
-      "currentTrainExample": 0,
+      "currentTrainExample": 4,
       "currentTestExample": 0
     },
     {
@@ -18785,17 +18766,18 @@
           }
         ]
       },
-      "currentTrainExample": 1,
+      "currentTrainExample": 0,
       "currentTestExample": 0
     },
     {
       "id": "1766269155891",
       "name": "Pattern recovery",
-      "description": "",
+      "description": "bad examples: need rewrite",
       "tags": [
         "easy",
         "recovery",
-        "pattern"
+        "pattern",
+        "deprecated"
       ],
       "examples": {
         "train": [
@@ -19175,7 +19157,7 @@
           }
         ]
       },
-      "currentTrainExample": 1,
+      "currentTrainExample": 0,
       "currentTestExample": 0
     },
     {
@@ -20485,13 +20467,13 @@
           }
         ]
       },
-      "currentTrainExample": 1,
+      "currentTrainExample": 0,
       "currentTestExample": 0
     },
     {
       "id": "1766314851068",
       "name": "Pollution clearing",
-      "description": "",
+      "description": "fix: removed ambiguous asymmetric patterns",
       "tags": [
         "easy",
         "large",
@@ -20623,7 +20605,7 @@
               [
                 0,
                 0,
-                1,
+                0,
                 0,
                 0,
                 0,
@@ -21599,7 +21581,7 @@
                 3,
                 3,
                 3,
-                2,
+                3,
                 0,
                 0
               ],
@@ -21651,7 +21633,7 @@
                 1,
                 4,
                 4,
-                2,
+                4,
                 4
               ],
               [
@@ -25277,7 +25259,7 @@
           }
         ]
       },
-      "currentTrainExample": 0,
+      "currentTrainExample": 1,
       "currentTestExample": 0
     },
     {
@@ -27130,7 +27112,7 @@
           }
         ]
       },
-      "currentTrainExample": 0,
+      "currentTrainExample": 1,
       "currentTestExample": 0
     },
     {
