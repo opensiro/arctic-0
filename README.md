@@ -72,8 +72,8 @@ Sample tasks from the ARCTIC-0 archive (input → output):
 .
 ├── arc-task-editor.html              # Single-file browser tool to author/edit ARC tasks
 ├── dataset/
-│   ├── arctic-0-85-0.6.2.json        # ARCTIC-0 archive: 85 tasks (train + test examples), tags, descriptions
-│   └── arctic-0-85-0.6.2_test.json   # Reference test outputs (answer key) for the 85 tasks
+│   ├── arctic-0-85-0.7.0.json        # ARCTIC-0 archive: 85 tasks (train + test examples), tags, descriptions
+│   └── arctic-0-85-0.7.0_test.json   # Reference test outputs (answer key) for the 85 tasks
 ├── png/                              # Sample task visualizations
 └── tags_analysis.ipynb               # Notebook analysing the TIC tag taxonomy / difficulty distribution
 ```
@@ -83,7 +83,7 @@ Sample tasks from the ARCTIC-0 archive (input → output):
 The archive is distributed as JSON. Each task is a set of input/output grid pairs
 using the standard ARC 10-color palette (`0`–`9`).
 
-### Archive — `dataset/arctic-0-85-0.6.2.json`
+### Archive — `dataset/arctic-0-85-0.7.0.json`
 
 Top-level object:
 
@@ -112,7 +112,7 @@ every cell is an integer `0`–`9` representing an ARC color.
 The `tags` field encodes the **Transfer & Induction Core** taxonomy — the same
 semantic tags a builder would receive under the sample-blind protocol.
 
-### Reference outputs — `dataset/arctic-0-85-0.6.2_test.json`
+### Reference outputs — `dataset/arctic-0-85-0.7.0_test.json`
 
 Maps task `id` → reference test outputs, for scoring model predictions:
 
@@ -179,7 +179,7 @@ Keyboard shortcuts (press `?` in the app for the full list):
 
 ## Analysis notebook
 
-`tags_analysis.ipynb` loads `dataset/arctic-0-85-0.6.2.json` and produces a
+`tags_analysis.ipynb` loads `dataset/arctic-0-85-0.7.0.json` and produces a
 summary of the TIC tag frequencies and the difficulty distribution (bar charts
 via matplotlib/seaborn). It requires Python with `matplotlib`, `pandas`, and
 `seaborn`:
@@ -194,7 +194,7 @@ jupyter notebook tags_analysis.ipynb
 ```python
 import json
 
-with open("dataset/arctic-0-85-0.6.2.json") as f:
+with open("dataset/arctic-0-85-0.7.0.json") as f:
     data = json.load(f)
 
 for task in data["tasks"]:
@@ -238,7 +238,7 @@ ARCTIC in your work, please cite this repository.
             Artem Ligostaev and Veronika Rastorgueva and
             Prutskii, Alekseii Sergeevich},
   year   = {2026},
-  note   = {ARCTIC-0 archive, task schema, and task editor, version 0.6.2},
+  note   = {ARCTIC-0 archive, task schema, and task editor, version 0.7.0},
   url    = {https://github.com/opensiro/arctic-0}
 }
 ```
