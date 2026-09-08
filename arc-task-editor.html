@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARC Task Creator</title>
+    <title>ARCTIC-0 Task Editor v1.0.0</title>
     <style>
         * {
             margin: 0;
@@ -471,7 +471,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>ARC Task Creator</h1>
+            <h1>ARCTIC-0 Task Editor <small>v1.0.0</small></h1>
         </header>
 
         <div class="main-layout">
@@ -655,6 +655,90 @@
             <span id="statusMessage">Ready</span>
         </div>
     </div>
+
+    <script>
+        // Pure import helpers are exposed for the editor's dependency-free unit tests.
+        function createTaskId() {
+            if (globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function') {
+                return globalThis.crypto.randomUUID();
+            }
+            return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        }
+
+        function validateImportedGrid(grid, label) {
+            if (!Array.isArray(grid) || grid.length < 1 || grid.length > 100) {
+                throw new Error(`${label} must have between 1 and 100 rows`);
+            }
+            const width = Array.isArray(grid[0]) ? grid[0].length : 0;
+            if (width < 1 || width > 100) {
+                throw new Error(`${label} must have between 1 and 100 columns`);
+            }
+            grid.forEach((row, rowIndex) => {
+                if (!Array.isArray(row) || row.length !== width) {
+                    throw new Error(`${label} row ${rowIndex + 1} is not rectangular`);
+                }
+                row.forEach((value, columnIndex) => {
+                    if (!Number.isInteger(value) || value < 0 || value > 9) {
+                        throw new Error(`${label} cell ${rowIndex + 1},${columnIndex + 1} must be an integer from 0 to 9`);
+                    }
+                });
+            });
+            return grid.map(row => [...row]);
+        }
+
+        function normalizeImportedTasks(rawTasks, createBlankGrid) {
+            if (!Array.isArray(rawTasks) || rawTasks.length === 0) {
+                throw new Error('The archive must contain at least one task');
+            }
+            const ids = new Set();
+            return rawTasks.map((task, taskIndex) => {
+                if (!task || typeof task !== 'object') {
+                    throw new Error(`Task ${taskIndex + 1} must be an object`);
+                }
+                const id = task.id ? String(task.id) : createTaskId();
+                if (ids.has(id)) throw new Error(`Duplicate task id: ${id}`);
+                ids.add(id);
+                const train = task.examples?.train;
+                const test = task.examples?.test;
+                if (!Array.isArray(train) || train.length === 0 || !Array.isArray(test) || test.length === 0) {
+                    throw new Error(`Task ${id} must contain at least one train and one test example`);
+                }
+                const normalizedTrain = train.map((example, index) => ({
+                    input: validateImportedGrid(example?.input, `Task ${id} train ${index + 1} input`),
+                    output: validateImportedGrid(example?.output, `Task ${id} train ${index + 1} output`)
+                }));
+                const normalizedTest = test.map((example, index) => ({
+                    input: validateImportedGrid(example?.input, `Task ${id} test ${index + 1} input`),
+                    output: example?.output === undefined
+                        ? createBlankGrid(3, 3)
+                        : validateImportedGrid(example.output, `Task ${id} test ${index + 1} output`)
+                }));
+                const currentTrainExample = Number.isInteger(task.currentTrainExample)
+                    && task.currentTrainExample >= 0 && task.currentTrainExample < normalizedTrain.length
+                    ? task.currentTrainExample : 0;
+                const currentTestExample = Number.isInteger(task.currentTestExample)
+                    && task.currentTestExample >= 0 && task.currentTestExample < normalizedTest.length
+                    ? task.currentTestExample : 0;
+                return {
+                    id,
+                    name: typeof task.name === 'string' && task.name.trim() ? task.name.trim() : 'Untitled Task',
+                    description: typeof task.description === 'string' ? task.description : '',
+                    tags: Array.isArray(task.tags)
+                        ? [...new Set(task.tags.filter(tag => typeof tag === 'string').map(tag => tag.trim().toLowerCase()).filter(Boolean))]
+                        : [],
+                    examples: { train: normalizedTrain, test: normalizedTest },
+                    currentTrainExample,
+                    currentTestExample
+                };
+            });
+        }
+
+        globalThis.ARCTICEditorValidation = {
+            createTaskId,
+            normalizeImportedTasks,
+            validateImportedGrid
+        };
+    </script>
 
     <script>
         // Global state
@@ -890,7 +974,7 @@
         // Task management
         function createNewTask() {
             const task = {
-                id: Date.now().toString(),
+                id: createTaskId(),
                 name: `Task ${appState.tasks.length + 1}`,
                 description: '',
                 tags: [],
@@ -1446,8 +1530,13 @@
         // Export/Import
         function exportJSON() {
             const exportData = {
-                version: '1.0',
+                schemaVersion: '1.0.0',
+                datasetVersion: '1.0.0',
                 exportDate: new Date().toISOString(),
+                maintainer: {
+                    name: 'xLagerFeuer',
+                    email: 'alexander.zhdanoff@gmail.com'
+                },
                 tasks: appState.tasks.map(task => ({
                     id: task.id,
                     name: task.name,
@@ -1480,9 +1569,9 @@
         }
 
         function exportTestOutputs() {
-            const testOutputs = {};
+            const answers = {};
             appState.tasks.forEach(task => {
-                testOutputs[task.id] = {
+                answers[task.id] = {
                     taskName: task.name,
                     testOutputs: task.examples.test.map((ex, idx) => ({
                         exampleIndex: idx,
@@ -1491,7 +1580,15 @@
                 };
             });
 
-            const json = JSON.stringify(testOutputs, null, 2);
+            const json = JSON.stringify({
+                schemaVersion: '1.0.0',
+                datasetVersion: '1.0.0',
+                maintainer: {
+                    name: 'xLagerFeuer',
+                    email: 'alexander.zhdanoff@gmail.com'
+                },
+                answers
+            }, null, 2);
             const blob = new Blob([json], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1521,25 +1618,7 @@
                         throw new Error('Invalid JSON format');
                     }
 
-                    // Ensure all tasks have proper structure
-                    tasks = tasks.map(task => ({
-                        id: task.id || Date.now().toString(),
-                        name: task.name || 'Untitled Task',
-                        description: task.description || '',
-                        tags: Array.isArray(task.tags) ? task.tags : [],
-                        examples: {
-                            train: (task.examples?.train || []).map(ex => ({
-                                input: ex.input || createGrid(3, 3),
-                                output: ex.output || createGrid(3, 3)
-                            })),
-                            test: (task.examples?.test || []).map(ex => ({
-                                input: ex.input || createGrid(3, 3),
-                                output: ex.output || createGrid(3, 3)
-                            }))
-                        },
-                        currentTrainExample: task.currentTrainExample || 0,
-                        currentTestExample: task.currentTestExample || 0
-                    }));
+                    tasks = normalizeImportedTasks(tasks, createGrid);
 
                     appState.tasks = tasks;
                     appState.currentTaskId = tasks[0].id;
@@ -1561,17 +1640,28 @@
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
-                    const testOutputs = JSON.parse(e.target.result);
+                    const payload = JSON.parse(e.target.result);
+                    const testOutputs = payload.answers || payload;
+                    if (!testOutputs || typeof testOutputs !== 'object' || Array.isArray(testOutputs)) {
+                        throw new Error('Invalid answer-key format');
+                    }
                     let importedCount = 0;
 
                     appState.tasks.forEach(task => {
                         if (testOutputs[task.id]) {
                             const outputs = testOutputs[task.id].testOutputs;
+                            if (!Array.isArray(outputs)) {
+                                throw new Error(`Invalid outputs for task ${task.id}`);
+                            }
                             outputs.forEach(item => {
-                                if (task.examples.test[item.exampleIndex]) {
-                                    task.examples.test[item.exampleIndex].output = item.output;
-                                    importedCount++;
+                                if (!Number.isInteger(item.exampleIndex) || !task.examples.test[item.exampleIndex]) {
+                                    throw new Error(`Invalid example index for task ${task.id}`);
                                 }
+                                task.examples.test[item.exampleIndex].output = validateImportedGrid(
+                                    item.output,
+                                    `Task ${task.id} answer ${item.exampleIndex + 1}`
+                                );
+                                importedCount++;
                             });
                         }
                     });
@@ -1602,7 +1692,9 @@
             if (saved) {
                 try {
                     const state = JSON.parse(saved);
-                    appState.tasks = state.tasks || [];
+                    appState.tasks = state.tasks?.length
+                        ? normalizeImportedTasks(state.tasks, createGrid)
+                        : [];
                     appState.currentTaskId = state.currentTaskId;
                     appState.currentColor = state.currentColor || 0;
                     appState.currentTab = state.currentTab || 'train';
@@ -1616,6 +1708,8 @@
                     }));
                 } catch (err) {
                     console.error('Error loading from localStorage:', err);
+                    appState.tasks = [];
+                    appState.currentTaskId = null;
                 }
             }
         }
