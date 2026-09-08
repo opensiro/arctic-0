@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/opensiro/arctic-0/raw/v1.0.0/schemas/arctic-archive.schema.json",
+  "title": "ARCTIC-0 public archive",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "datasetVersion", "exportDate", "maintainer", "tasks"],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "datasetVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "exportDate": { "type": "string", "format": "date-time" },
+    "maintainer": { "$ref": "#/$defs/maintainer" },
+    "tasks": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/task" }
+    }
+  },
+  "$defs": {
+    "maintainer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "email"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "email": { "type": "string", "format": "email" }
+      }
+    },
+    "row": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100,
+      "items": { "type": "integer", "minimum": 0, "maximum": 9 }
+    },
+    "grid": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100,
+      "items": { "$ref": "#/$defs/row" }
+    },
+    "trainPair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input", "output"],
+      "properties": {
+        "input": { "$ref": "#/$defs/grid" },
+        "output": { "$ref": "#/$defs/grid" }
+      }
+    },
+    "testPair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input"],
+      "properties": {
+        "input": { "$ref": "#/$defs/grid" }
+      }
+    },
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "description", "tags", "examples", "currentTrainExample", "currentTestExample"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "tags": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "examples": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["train", "test"],
+          "properties": {
+            "train": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/trainPair" } },
+            "test": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/testPair" } }
+          }
+        },
+        "currentTrainExample": { "type": "integer", "minimum": 0 },
+        "currentTestExample": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

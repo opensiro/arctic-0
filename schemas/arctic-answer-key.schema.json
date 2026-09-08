@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/opensiro/arctic-0/raw/v1.0.0/schemas/arctic-answer-key.schema.json",
+  "title": "ARCTIC-0 reference answer key",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "datasetVersion", "maintainer", "answers"],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "datasetVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "maintainer": { "$ref": "#/$defs/maintainer" },
+    "answers": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/taskAnswers" }
+    }
+  },
+  "$defs": {
+    "taskAnswers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["taskName", "testOutputs"],
+      "properties": {
+        "taskName": { "type": "string", "minLength": 1 },
+        "testOutputs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["exampleIndex", "output"],
+            "properties": {
+              "exampleIndex": { "type": "integer", "minimum": 0 },
+              "output": { "$ref": "#/$defs/grid" }
+            }
+          }
+        }
+      }
+    },
+    "maintainer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "email"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "email": { "type": "string", "format": "email" }
+      }
+    },
+    "row": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100,
+      "items": { "type": "integer", "minimum": 0, "maximum": 9 }
+    },
+    "grid": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100,
+      "items": { "$ref": "#/$defs/row" }
+    }
+  }
+}
