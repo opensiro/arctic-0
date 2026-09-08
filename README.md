@@ -4,12 +4,14 @@
 systems can autonomously transfer their capabilities into compact models that
 generalize to unseen tasks.
 
-This repository is the open-source release of **ARCTIC-0**: the task archive, the
+This repository is the stable **ARCTIC-0 archive/tooling v1.0.0 release**: the task archive, the
 task schema, the **Transfer & Induction Core** (TIC) taxonomy, the task-authoring
 editor, and the tag-analysis notebook.
 
-> **Status:** ARCTIC-0 archive and tooling (this repo). The evaluator, sample-blind
-> feedback protocol, hosted runtime, and public leaderboard are forthcoming.
+> **Release scope:** v1.0.0 covers the public ARCTIC-0 archive, schemas, taxonomy,
+> validation tooling, task editor, and analysis notebook. The evaluator,
+> sample-blind feedback service, hosted runtime, and public leaderboard are
+> separate roadmap deliverables and are not part of this release.
 
 ## What ARCTIC evaluates
 
@@ -72,8 +74,13 @@ Sample tasks from the ARCTIC-0 archive (input → output):
 .
 ├── arc-task-editor.html              # Single-file browser tool to author/edit ARC tasks
 ├── dataset/
-│   ├── arctic-0-85-0.7.0.json        # ARCTIC-0 archive: 85 tasks (train + test examples), tags, descriptions
-│   └── arctic-0-85-0.7.0_test.json   # Reference test outputs (answer key) for the 85 tasks
+│   ├── arctic-0-85-1.0.0.json        # Public archive: train pairs and test inputs
+│   ├── arctic-0-85-1.0.0_test.json   # Reference test outputs (answer key)
+│   ├── tic-taxonomy.json              # Controlled TIC tag vocabulary and v0.x aliases
+│   └── LICENSE                        # Dataset license (CC BY 4.0)
+├── schemas/                           # JSON Schema contracts for both JSON artifacts
+├── scripts/                           # Release, notebook, and checksum validation
+├── tests/                             # Dataset and editor-import regression tests
 ├── png/                              # Sample task visualizations
 └── tags_analysis.ipynb               # Notebook analysing the TIC tag taxonomy / difficulty distribution
 ```
@@ -83,14 +90,16 @@ Sample tasks from the ARCTIC-0 archive (input → output):
 The archive is distributed as JSON. Each task is a set of input/output grid pairs
 using the standard ARC 10-color palette (`0`–`9`).
 
-### Archive — `dataset/arctic-0-85-0.7.0.json`
+### Archive — `dataset/arctic-0-85-1.0.0.json`
 
 Top-level object:
 
 | Field        | Type     | Description                                            |
 |--------------|----------|--------------------------------------------------------|
-| `version`    | string   | Export format version (`"1.0"`).                       |
+| `schemaVersion` | string | JSON contract version (`"1.0.0"`).                    |
+| `datasetVersion` | string | ARCTIC-0 content version (`"1.0.0"`).                 |
 | `exportDate` | string   | ISO-8601 export timestamp.                             |
+| `maintainer` | object   | Release maintainer name and email.                     |
 | `tasks`      | array    | List of 85 task objects (schema below).                |
 
 Each task object:
@@ -102,27 +111,31 @@ Each task object:
 | `description`        | string  | Free-form task description.                                       |
 | `tags`               | array   | TIC skill + difficulty labels (e.g. `predict`, `torus`, `easy`).  |
 | `examples.train`     | array   | Training pairs with visible `input` and `output` grids.           |
-| `examples.test`      | array   | Test pairs (`input` shown, `output` is the target).               |
+| `examples.test`      | array   | Test inputs only. Targets are excluded from the public archive.   |
 | `currentTrainExample`| integer | Last-edited train index (editor bookkeeping).                     |
 | `currentTestExample` | integer | Last-edited test index (editor bookkeeping).                      |
 
-Each example is `{ "input": [[int,...],...], "output": [[int,...],...] }`, where
-every cell is an integer `0`–`9` representing an ARC color.
+Train examples are `{ "input": [[int,...],...], "output": [[int,...],...] }`.
+Public test examples are `{ "input": [[int,...],...] }`; their targets live only
+in the separate answer key. Every grid is rectangular, at most 100×100, and each
+cell is an integer `0`–`9` representing an ARC color.
 
 The `tags` field encodes the **Transfer & Induction Core** taxonomy — the same
 semantic tags a builder would receive under the sample-blind protocol.
 
-### Reference outputs — `dataset/arctic-0-85-0.7.0_test.json`
+### Reference outputs — `dataset/arctic-0-85-1.0.0_test.json`
 
-Maps task `id` → reference test outputs, for scoring model predictions:
+The `answers` field maps task `id` → reference test outputs for scoring model predictions:
 
 ```json
 {
-  "<taskId>": {
-    "taskName": "Task Name",
-    "testOutputs": [
-      { "exampleIndex": 0, "output": [[...]] }
-    ]
+  "schemaVersion": "1.0.0",
+  "datasetVersion": "1.0.0",
+  "answers": {
+    "<taskId>": {
+      "taskName": "Task Name",
+      "testOutputs": [{ "exampleIndex": 0, "output": [[...]] }]
+    }
   }
 }
 ```
@@ -132,7 +145,7 @@ Maps task `id` → reference test outputs, for scoring model predictions:
 | Metric                      | Value |
 |-----------------------------|-------|
 | Tasks                       | 85    |
-| Unique tags                 | 88    |
+| Unique tags                 | 79    |
 | Training examples (total)   | 211   |
 | Test examples (total)       | 85    |
 | Avg. training pairs/task    | 2.48  |
@@ -142,7 +155,7 @@ Difficulty distribution (by tag):
 
 | Difficulty | Tasks |
 |------------|-------|
-| easy       | 53    |
+| easy       | 54    |
 | medium     | 23    |
 | hard       | 7     |
 | expert     | 1     |
@@ -179,22 +192,23 @@ Keyboard shortcuts (press `?` in the app for the full list):
 
 ## Analysis notebook
 
-`tags_analysis.ipynb` loads `dataset/arctic-0-85-0.7.0.json` and produces a
+`tags_analysis.ipynb` loads `dataset/arctic-0-85-1.0.0.json` and produces a
 summary of the TIC tag frequencies and the difficulty distribution (bar charts
-via matplotlib/seaborn). It requires Python with `matplotlib`, `pandas`, and
-`seaborn`:
+via matplotlib/seaborn). The tested dependencies are pinned in `requirements.txt`:
 
 ```bash
-pip install matplotlib pandas seaborn
-jupyter notebook tags_analysis.ipynb
+python -m pip install -r requirements.txt
+python scripts/run_notebook.py tags_analysis.ipynb
 ```
+
+To explore it interactively, open the same file with any Jupyter-compatible UI.
 
 ## Loading the dataset
 
 ```python
 import json
 
-with open("dataset/arctic-0-85-0.7.0.json") as f:
+with open("dataset/arctic-0-85-1.0.0.json") as f:
     data = json.load(f)
 
 for task in data["tasks"]:
@@ -204,7 +218,33 @@ for task in data["tasks"]:
         # ...your student model...
 ```
 
-## Roadmap
+## Validation
+
+Node.js 22+ and Python 3.11+ are used by CI. Run the same release gate locally:
+
+```bash
+npm test
+python -m pip install -r requirements.txt
+python scripts/validate_schemas.py
+python scripts/run_notebook.py tags_analysis.ipynb
+node scripts/verify-checksums.mjs
+```
+
+The validator checks task IDs and names, controlled tags, difficulty coverage,
+grid shape and color range, archive/answer-key correspondence, release metrics,
+editor JavaScript syntax, schemas, and release metadata.
+
+## Versioning
+
+ARCTIC-0 uses semantic versions for both data and schemas. `datasetVersion`
+changes when task content or taxonomy changes. `schemaVersion` changes when the
+JSON contract changes. The v1.0.0 files are immutable release artifacts; future
+versions will use new filenames.
+
+See [CHANGELOG.md](./CHANGELOG.md), [RELEASE.md](./RELEASE.md), and the machine-readable
+[CITATION.cff](./CITATION.cff).
+
+## Roadmap beyond archive/tooling v1.0.0
 
 The full ARCTIC release will open-source the evaluator, sample-blind feedback
 protocol, mathematical specification, validated task taxonomy, baseline suite,
@@ -224,7 +264,7 @@ taxonomy, task editor, and taxonomy analysis**.
 ## License
 
 - **Code** (`arc-task-editor.html`): [MIT License](./LICENSE).
-- **Dataset** (`dataset/`): [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+- **Dataset** (`dataset/`): [CC BY 4.0](./dataset/LICENSE).
 
 By using this dataset you agree to the applicable license terms. If you use
 ARCTIC in your work, please cite this repository.
@@ -234,11 +274,13 @@ ARCTIC in your work, please cite this repository.
 ```bibtex
 @misc{arctic0,
   title  = {ARCTIC: Open Benchmark and Public Runtime for Transfer \& Induction},
-  author = {Alex Zhdanov and Artem-Darius Weber and Egor Kolychev and
+  author = {Alexander Zhdanov (xLagerFeuer) and Artem-Darius Weber and Egor Kolychev and
             Artem Ligostaev and Veronika Rastorgueva and
             Prutskii, Alekseii Sergeevich},
   year   = {2026},
-  note   = {ARCTIC-0 archive, task schema, and task editor, version 0.7.0},
+  note   = {ARCTIC-0 archive, task schema, and task editor, version 1.0.0},
   url    = {https://github.com/opensiro/arctic-0}
 }
 ```
+
+Maintainer: **xLagerFeuer** — `alexander.zhdanoff@gmail.com`.

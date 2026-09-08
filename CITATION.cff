@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use ARCTIC-0, please cite this release."
+title: "ARCTIC: Open Benchmark and Public Runtime for Transfer & Induction"
+type: dataset
+version: 1.0.0
+date-released: 2026-09-08
+url: "https://github.com/opensiro/arctic-0"
+repository-code: "https://github.com/opensiro/arctic-0"
+license: CC-BY-4.0
+authors:
+  - family-names: Zhdanov
+    given-names: Alexander
+    alias: xLagerFeuer
+    email: alexander.zhdanoff@gmail.com
+  - family-names: Weber
+    given-names: Artem-Darius
+  - family-names: Kolychev
+    given-names: Egor
+  - family-names: Ligostaev
+    given-names: Artem
+  - family-names: Rastorgueva
+    given-names: Veronika
+  - family-names: Prutskii
+    given-names: Alekseii Sergeevich
+contact:
+  - family-names: Zhdanov
+    given-names: Alexander
+    alias: xLagerFeuer
+    email: alexander.zhdanoff@gmail.com

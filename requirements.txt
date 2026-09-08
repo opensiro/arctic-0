@@ -1,0 +1,5 @@
+matplotlib==3.6.3
+pandas==1.5.2
+seaborn==0.12.2
+jsonschema==4.17.3
+PyYAML==6.0.3

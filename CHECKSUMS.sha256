@@ -1,0 +1,7 @@
+6f952930d26a063409dfd3232ff85955e3ebebd6e685854c433f39756af816ad  arc-task-editor.html
+5c7700c3fd4101150e7e3425912f84df4307a3af9e830869372c3bbe7cb2ff72  dataset/arctic-0-85-1.0.0.json
+3db48b4add64aac6b73572083da99534dd42197d00556aa04589991c206ae94d  dataset/arctic-0-85-1.0.0_test.json
+200f9d1e273b1b87ac2460a01dc6d600f83b112655e48aed281c2f2542d00d00  dataset/tic-taxonomy.json
+6b2e33558b825e09730969169f3b629c84b2062e84c7aa919fbf26860676dd3b  schemas/arctic-answer-key.schema.json
+0afdfe54a7f5badf1ece42ef7d199a1870840cb1ee1929cdec1206263e9e6b97  schemas/arctic-archive.schema.json
+6fbfdaea99a74240db4c9e316dc541346d53b7ef326a127770754f3aa596918b  tags_analysis.ipynb

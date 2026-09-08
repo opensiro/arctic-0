@@ -1,0 +1,14 @@
+{
+  "name": "arctic-0-release",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Validation tooling for the ARCTIC-0 public archive",
+  "author": "xLagerFeuer <alexander.zhdanoff@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test && node scripts/validate-release.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
