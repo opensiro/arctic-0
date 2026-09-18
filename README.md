@@ -13,6 +13,14 @@ editor, and the tag-analysis notebook.
 > sample-blind feedback service, hosted runtime, and public leaderboard are
 > separate roadmap deliverables and are not part of this release.
 
+## Working on OpenSiro?
+
+Repository-local ARCTIC work stays here.
+
+For contributor roles, authority, escalation, cross-repository coordination, or organizational evolution across public OpenSiro projects, start at [`opensiro/vsm-oss-organization/CONTRIBUTOR_START.md`](https://github.com/opensiro/vsm-oss-organization/blob/main/CONTRIBUTOR_START.md).
+
+ARCTIC remains a separate research track. Routing organization-wide questions through that entry point does not make ARCTIC part of the VSM Harness Index or its bounded operational S1 plane.
+
 ## What ARCTIC evaluates
 
 Most existing benchmarks evaluate a frontier model directly, which makes model
